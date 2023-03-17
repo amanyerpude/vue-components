@@ -1,3 +1,10 @@
+/**
+ * Vue component for infinite scrolling of a list of items.
+ * @module components/infinite-scroll
+ * @vue-prop {Array} items - Array of items to be rendered.
+ * @vue-prop {Boolean} loading - Loading state of the component.
+ * @vue-prop {Number} loadMoreThreshold - Threshold for loading more items.
+ */
 <template>
     <div ref="container">
         <ul>
@@ -46,7 +53,8 @@ export default {
         */
         items: {
             type: Array,
-            required: true
+            required: true,
+            description: "Array of items to be rendered."
         },
 
         /**
@@ -55,8 +63,14 @@ export default {
         */
         loading: {
             type: Boolean,
-            required: true
-        }
+            required: true,
+            description: "Loading state of the component."
+        },
+        loadMoreThreshold: {
+            type: Number,
+            default: 1,
+            description: "Threshold for loading more items."
+        },
     },
     /**
      * Data for infinite scroll component.
@@ -74,21 +88,30 @@ export default {
 
     },
     /**
-     * Mounted lifecycle hook for infinite scroll component.
+     * Mounted lifecycle hook for the infinite scroll component.
+     * @function
      */
     mounted() {
+        console.log("Mounted!");
         /**
         * Create observer with options and pass handleIntersectDebounced as callback.
         */
-        this.observer = new IntersectionObserver(this.handleIntersect, { root: this.$refs.container }); // create observer with options
+        this.observer = new IntersectionObserver(this.handleCheckIntersectiontDebounced, {
+            root: null,
+            rootMargin: "0px",
+            threshold: 1.0
+        });
+        console.log("Observer created:", this.observer);
         /**
          * Observe sentinel element.
          */
         this.observer.observe(this.$refs.sentinel); // observe sentinel element
+        console.log("Sentinel observed:", this.$refs.sentinel);
     },
     /**
-     * Before destroy lifecycle hook for infinite scroll component.
-     */
+    * Before destroy lifecycle hook for the infinite scroll component.
+    * @function
+    */
     beforeDestroy() {
         /**
         * Disconnect observer when component is destroyed.
@@ -97,22 +120,24 @@ export default {
     },
     methods: {
         /**
-         * Debounced version of handleIntersect method using debounce function defined above.
-         */
-        handleIntersectDebounced: debounce(function (entries) {
-            this.handleIntersect(entries);
+        * Debounced function to handle checking the intersection of the sentinel element.
+        * @function
+        * @param {Array} entries - Array of intersection observer entries.
+        */
+        handleCheckIntersectiontDebounced: debounce(function (entries) {
+            this.checkIntersection(entries);
         }, 300),
         /**
-          * Handle intersection event and emit loadMore event if needed.
-          */
-        handleIntersect(entries) {
-            const entry = entries[0]; // get first entry from entries array
-
-            if (entry.isIntersecting && !this.loading) {
-                // if sentinel element is visible and loading state is false
-                this.$emit("loadMore"); // emit loadMore event to parent component
-            }
-        },
+        * Function to check the intersection of the sentinel element and load more items if it's intersecting.
+        * @function
+        * @param {Array} entries - Array of intersection observer entries.
+        */
+        checkIntersection(entries) {
+  const lastEntry = entries[entries.length - 1];
+  if (lastEntry.isIntersecting && !this.loading) {
+    this.$emit("load-more");
+  }
+}
     }
 };
 </script>
