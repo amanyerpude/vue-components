@@ -14,12 +14,15 @@
                     <!-- use a slot to render different item components -->
                     <slot :item="item"></slot>
                 </li>
+                <!-- Add a list item for the loading indicator -->
+                <li v-if="loading" key="loading-indicator">
+                    <!-- add a named slot for loading state -->
+                    <slot name="loading"></slot>
+                </li>
             </transition-group>
         </ul>
         <!-- add a sentinel element at the end of the list -->
         <div ref="sentinel"></div>
-        <!-- add a named slot for loading state -->
-        <slot name="loading" v-if="loading"></slot>
     </div>
 </template>
   
@@ -133,11 +136,11 @@ export default {
         * @param {Array} entries - Array of intersection observer entries.
         */
         checkIntersection(entries) {
-  const lastEntry = entries[entries.length - 1];
-  if (lastEntry.isIntersecting && !this.loading) {
-    this.$emit("load-more");
-  }
-}
+            const lastEntry = entries[entries.length - 1];
+            if (lastEntry.isIntersecting && !this.loading && lastEntry.intersectionRatio >= this.loadMoreThreshold) {
+                this.$emit("load-more");
+            }
+        }
     }
 };
 </script>
@@ -156,3 +159,32 @@ export default {
     transform: translateY(30px);
 }
 </style>
+
+/**
+*There are a few improvements that can be made to this component:
+
+Improve the naming of some variables and functions to make their purpose clearer. For example, handleCheckIntersectiontDebounced could be renamed to debouncedCheckIntersection, and checkIntersection could be renamed to handleIntersection.
+
+Provide a more meaningful default value for the loadMoreThreshold prop. The current default value is 1, which is not very helpful without context. A better default value could be something like 0.5, which would mean that the sentinel element should be 50% visible before triggering a load more event.
+
+Add error handling for the case where the IntersectionObserver API is not supported by the browser. In this case, the component should not break but instead display an error message or fallback behavior.
+
+Add support for server-side rendering (SSR) by checking if the component is being rendered on the server and not adding the intersection observer in that case. This is important because the IntersectionObserver API is not supported on the server and will cause errors.
+
+Provide more flexibility in the way items are rendered by allowing the user to specify a custom component to be used for rendering each item, instead of just using a slot.
+
+Add tests to ensure that the component works correctly in all scenarios and edge cases.
+
+Improve the CSS styles to make the loading indicator more prominent and visually appealing.
+
+Add support for dynamically changing the list of items, which is not currently supported by the component.
+
+Add documentation to explain how to use the component and its props, and provide examples of common use cases.
+**/
+/***
+*One potential improvement could be to make the handleCheckIntersectiontDebounced method more reusable by allowing the debounce time to be passed as a parameter. This would make it easier to adjust the debounce time based on specific use cases.
+
+Additionally, the current implementation assumes that there is only one sentinel element on the page, which may not always be the case. It may be worth adding a prop to specify a unique ID for the sentinel element, so that multiple instances of the component can coexist on the same page without interfering with each other.
+
+Finally, the current implementation assumes that the items passed in are objects with an id property, which may not always be the case. It may be worth adding a prop to specify a custom key to be used for the v-for loop instead of hardcoding :key="item.id".
+*/
